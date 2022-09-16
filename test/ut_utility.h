@@ -1,112 +1,167 @@
-#include "../src/folder.h"
-#include "../src/app.h"
+#include "../src/shape.h"
+#include "../src/rectangle.h"
+#include "../src/triangle.h"
+#include "../src/ellipse.h"
+#include "../src/two_dimensional_coordinate.h"
+#include "../src/shape_iterator.h"
+#include "../src/iterator.h"
+#include "../src/null_iterator.h"
 #include "../src/utility.h"
+class UtUlityTest : public ::testing::Test {
+protected:
+  void SetUp() override {
 
-class UtlilityTestSuite: public testing::Test {
-    protected:
-    virtual void SetUp() {
-        firefox = new App("1", "firefox", 62.38);
-        twitter = new App("2", "twitter", 1.16);
-        instagram = new App("3", "instagram", 77.77);
-        netflix = new App("4", "netflix", 495.32);
-        foodpanda = new App("5", "foodpanda", 14.796);
-        messenger = new App("6", "messenger", 79.25);
+    r34 = new Rectangle("4",2, 2);
+    e43 = new Ellipse("3",3, 1);
+    triangleVector.push_back(new TwoDimensionalCoordinate(0, 0));
+    triangleVector.push_back(new TwoDimensionalCoordinate(3, 0));
+    triangleVector.push_back(new TwoDimensionalCoordinate(0, 4));
+    t345 = new Triangle("2",triangleVector,"YELLOW");
+    shapeVector.push_back(t345);
+    mbox2 = new CompoundShape("1",shapeVector);
+    //mbox2->addShape(t345);
+    shapeVector.clear();
+    shapeVector.push_back(e43);
+    shapeVector.push_back(r34);
+    mbox = new CompoundShape("0",shapeVector);
+    mbox->addShape(mbox2);
+  }
 
-        favorite = new Folder("7", "favorite");
-        common = new Folder("8", "common");
-        community = new Folder("9", "community");
-        trash = new Folder("10", "trash");
-        addNodes();
-    }
+  void TearDown() override {
+    delete r34;
+    delete e43;
+    delete t345;
+    delete mbox;
+    delete mbox2;
+  }
 
-    void addNodes() {
-        favorite->addNode(firefox);
-        favorite->addNode(twitter);
-        favorite->addNode(common);
-        common->addNode(instagram);
-        common->addNode(community);
-        common->addNode(netflix);
-        community->addNode(foodpanda);
-        community->addNode(messenger);
-        community->addNode(trash);
+  Shape * r34;
+  Shape * e43;
+  Shape * t345;
 
-    }
-
-    Node* firefox;
-    Node* twitter;
-    Node* instagram;
-    Node* netflix;
-    Node* foodpanda;
-    Node* messenger;
-
-    Node* favorite;
-    Node* common;
-    Node* community;
-    Node* trash;
+  Shape * mbox;
+  Shape * mbox2;
+  std::vector<TwoDimensionalCoordinate*> triangleVector;
+  std::list<Shape *> shapeVector ;
+  std::deque<Shape *> dq;
 };
 
-TEST_F(UtlilityTestSuite, exception_for_app_filter_by_size) {
-    try {
-        filterNode(firefox, SizeFilter(100, 1));
-        FAIL();
-    }catch(std::string e) {
-        ASSERT_EQ("Only folder can filter node!", e);
+TEST_F(UtUlityTest,createUtUlityTest){
+
+  Shape * temp = getShapeById(mbox,"2");
+  ASSERT_EQ(t345,temp);
+}
+
+TEST_F(UtUlityTest,exception_for_rectangle_get_shape_by_id){
+  try{
+    getShapeById(r34,"4");
+    FAIL();
+  }catch(std::string e){
+    ASSERT_EQ("Only compound shape can get shape!",e);
+  }
+}
+
+TEST_F(UtUlityTest,exception_for_rectangle_filter_shape){
+  try{
+    dq = filterShape(r34, AreaFilter(50, 1));
+    FAIL();
+  }catch(std::string e){
+    ASSERT_EQ("Only compound shape can filter shape!",e);
+  }
+}
+
+TEST_F(UtUlityTest,exception_for_ellipse_get_shape_by_id){
+  try{
+    getShapeById(e43,"5");
+    FAIL();
+  }catch(std::string e){
+    ASSERT_EQ("Only compound shape can get shape!",e);
+  }
+}
+
+TEST_F(UtUlityTest,exception_for_ellipse_filter_shape){
+  try{
+    dq = filterShape(e43, AreaFilter(50, 1));
+    FAIL();
+  }catch(std::string e){
+    ASSERT_EQ("Only compound shape can filter shape!",e);
+  }
+}
+
+TEST_F(UtUlityTest,exception_for_triangle_get_shape_by_id){
+  try{
+    getShapeById(t345,"6");
+    FAIL();
+  }catch(std::string e){
+    ASSERT_EQ("Only compound shape can get shape!",e);
+  }
+}
+
+TEST_F(UtUlityTest,exception_for_triangle_filter_shape){
+  try{
+    dq = filterShape(t345, AreaFilter(50, 1));
+    FAIL();
+  }catch(std::string e){
+    ASSERT_EQ("Only compound shape can filter shape!",e);
+  }
+}
+
+TEST_F(UtUlityTest,compound_shape_get_shape_by_id){
+
+  Shape * temp = getShapeById(mbox,"2");
+  ASSERT_EQ(t345,temp);
+}
+
+TEST_F(UtUlityTest,compound_shape_filter_shape_by_area){
+
+    dq = filterShape(mbox, AreaFilter(50, 1));
+    ASSERT_EQ(e43,dq[0]);
+    ASSERT_EQ(r34,dq[1]);
+    ASSERT_EQ(mbox2,dq[2]);
+    ASSERT_EQ(t345,dq[3]);
+}
+
+TEST_F(UtUlityTest,compound_shape_filter_shape_by_perimeter){
+
+    dq = filterShape(mbox, PerimeterFilter(50, 1));
+    ASSERT_EQ(e43,dq[0]);
+    ASSERT_EQ(r34,dq[1]);
+    ASSERT_EQ(mbox2,dq[2]);
+    ASSERT_EQ(t345,dq[3]);
+}
+
+TEST_F(UtUlityTest,compound_shape_filter_shape_by_type){
+
+    dq = filterShape(mbox, TypeFilter("Triangle"));
+    ASSERT_EQ(t345,dq[0]);
+}
+
+TEST_F(UtUlityTest,compound_shape_filter_shape_by_color){
+    try{
+      dq = filterShape(t345, ColorFilter("YELLOW"));
+      FAIL();
+    }catch(std::string e){
+      ASSERT_EQ("Only compound shape can filter shape!",e);
     }
 }
 
-TEST_F(UtlilityTestSuite, folder_filter_by_size_between_80_and_50) {
-    std::deque<Node *> results = filterNode(favorite, SizeFilter(142.56, 74));
+TEST_F(UtUlityTest,UtUlityExceptionTest){
+  try{
+    Shape * temp = getShapeById(mbox,"0");
+    FAIL();
+  }catch(std::string e){
+    ASSERT_EQ("Expected get shape but shape not found",e);
+  }
 
-    ASSERT_EQ(3, results.size());
-    
-    EXPECT_EQ("3", results[0]->id());
-    EXPECT_DOUBLE_EQ(77.77, results[0]->size());
-
-    EXPECT_EQ("9", results[1]->id());
-    EXPECT_DOUBLE_EQ(94.046, results[1]->size());
-
-    EXPECT_EQ("6", results[2]->id());
-    EXPECT_DOUBLE_EQ(79.25, results[2]->size());
-}
-
-TEST_F(UtlilityTestSuite, folder_filter_by_size_between_999_and_0) {
-    std::deque<Node *> results = filterNode(favorite, SizeFilter(999, 0));
-
-    ASSERT_EQ(9, results.size());
-
-    EXPECT_EQ("1", results[0]->id());
-    EXPECT_DOUBLE_EQ(62.38, results[0]->size());
-
-    EXPECT_EQ("2", results[1]->id());
-    EXPECT_DOUBLE_EQ(1.16, results[1]->size());
-
-    EXPECT_EQ("8", results[2]->id());
-    EXPECT_DOUBLE_EQ(667.136, results[2]->size());
-
-    EXPECT_EQ("3", results[3]->id());
-    EXPECT_DOUBLE_EQ(77.77, results[3]->size());
-
-    EXPECT_EQ("9", results[4]->id());
-    EXPECT_DOUBLE_EQ(94.046, results[4]->size());
-
-    EXPECT_EQ("5", results[5]->id());
-    EXPECT_DOUBLE_EQ(14.796, results[5]->size());
-
-    EXPECT_EQ("6", results[6]->id());
-    EXPECT_DOUBLE_EQ(79.25, results[6]->size());
-
-    EXPECT_EQ("10", results[7]->id());
-    EXPECT_DOUBLE_EQ(0, results[7]->size());
-
-    EXPECT_EQ("4", results[8]->id());
-    EXPECT_DOUBLE_EQ(495.32, results[8]->size());
 }
 
 
-TEST_F(UtlilityTestSuite, folder_filter_by_size_equal_to_zero) {
-    std::deque<Node *> results = filterNode(favorite, SizeFilter(0, 0));
-    ASSERT_EQ(1, results.size());
+TEST_F(UtUlityTest,UtUlitygetByExceptionTest){
+  try{
+    Shape * temp = getShapeById(r34,"0");
+    FAIL();
+  }catch(std::string e){
+    ASSERT_EQ("Only compound shape can get shape!",e);
+  }
 
-    EXPECT_EQ("10", results[0]->id());
-    EXPECT_EQ(0, results[0]->size());
 }
